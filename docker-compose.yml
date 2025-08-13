@@ -1,5 +1,5 @@
+# docker-compose.yml
 services:
-  # Frontend (Next.js)
   frontend:
     build:
       context: ./frontend
@@ -10,10 +10,15 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    healthcheck:
+      # Next.js App Router API route (see app/api/health/route.js)
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 
-  # Backend (Express + PostgreSQL client)
   backend:
     build:
       context: ./backend
@@ -25,17 +30,17 @@ services:
       db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5000/health"]
-      interval: 10s
+      # backend/server.js `/health` route (must be defined BEFORE /:shortCode)
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5000/health || exit 1"]
+      interval: 15s
       timeout: 5s
-      retries: 12
-      start_period: 60s
+      retries: 5
     networks:
       - app-network
 
-  # Database (PostgreSQL)
   db:
-    image: postgres:13-alpine
+    build:
+      context: ./db
     env_file:
       - ./backend/.env
     volumes:
@@ -48,7 +53,6 @@ services:
     networks:
       - app-network
 
-# Networks and Volumes
 networks:
   app-network:
     driver: bridge
