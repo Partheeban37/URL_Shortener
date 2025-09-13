@@ -1,5 +1,4 @@
 
-```markdown
 # 📌 URL Shortener - Three-Tier Application (Next.js + Node.js + PostgreSQL)
 
 A fully containerized **three-tier URL Shortener** application built with:
